@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hệ thống mô phỏng phòng mổ robot</title>
+<link rel="stylesheet" href="static/sim/sim.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <header>
+      <h1>Hệ thống mô phỏng phòng mổ: nội soi và robot</h1>
+      <p>Xem thị phạm ê kíp làm đúng quy trình, rồi tự thực hành một vai trong ê kíp. Kết quả được chấm trên máy chủ và hiện ngay trên bảng điều khiển giảng viên.</p>
+    </header>
+    <a class="navlink srv" href="./" target="_blank" rel="noopener">Bảng điều khiển giảng viên</a>
+  </div>
+
+  <div class="layout">
+    <section class="stage">
+      <div class="or-wrap" id="orWrap">
+        <canvas id="or" aria-label="Phòng mổ 3D. Kéo để xoay, cuộn để phóng to, bấm để chọn vị trí."></canvas>
+        <div id="labels"></div>
+        <div class="banner" id="banner" hidden></div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+      <div class="bar">
+        <span class="lbl" id="viewLbl">Góc nhìn</span>
+        <div class="seg" role="group" aria-labelledby="viewLbl" id="viewSeg">
+          <button type="button" data-v="overview" aria-pressed="true">Toàn cảnh</button>
+          <button type="button" data-v="table" aria-pressed="false">Bàn mổ</button>
+          <button type="button" data-v="console" aria-pressed="false">Bàn điều khiển</button>
+          <button type="button" data-v="top" aria-pressed="false">Từ trên xuống</button>
+          <button type="button" data-v="follow:stu1" aria-pressed="false">Theo sinh viên</button>
+        </div>
+        <span class="spacer"></span>
+        <label class="chk"><input type="checkbox" id="showLabels" checked> Nhãn</label>
+        <label class="chk"><input type="checkbox" id="showSterile"> Vùng vô khuẩn</label>
+      </div>
+      <section class="vpanel" id="videoBox" hidden>
+        <div class="vhead"><div><p class="eyebrow">Video ca mổ thật, đồng bộ theo bước</p><strong id="vidTitle"></strong>
+          <p class="hint">Nguồn: <a id="vidSrc" target="_blank" rel="noopener"></a> · <a class="srv" href="video-markers" target="_blank" rel="noopener">Gắn mốc video (giảng viên)</a></p></div>
+          <div class="vctl"><label class="chk"><input type="checkbox" id="vidSync" checked> Phát đoạn video khi hoàn thành bước</label>
+            <label class="chk demo-only"><input type="checkbox" id="vidWait" checked> Thị phạm chờ hết đoạn video</label>
+            <button class="btn" id="vidReplay" type="button" disabled>Xem lại đoạn vừa rồi</button></div></div>
+        <div class="vplayer"><div id="vidPlayer"></div></div>
+        <p class="vseg" id="vidSeg"></p>
+        <p class="warn" id="vidDiff" hidden>Đoạn video này khác quy trình đang dùng làm chuẩn chấm. Làm theo quy trình của bệnh viện, không làm theo video.</p>
+        <p class="hint" id="vidCover"></p><p class="hint" id="vidNote"></p><p class="hint" id="vidStatus"></p>
+      </section>
+      <p class="cap">Kéo để xoay góc nhìn, cuộn chuột để phóng to. Trong module vô khuẩn: bấm lên sàn để di chuyển, bật "Chạm tay" rồi bấm lên khăn mổ hoặc bàn dụng cụ để chạm.</p>
+    </section>
+
+    <aside class="side">
+      <section class="panel" id="setup">
+        <h2>Bắt đầu một buổi</h2>
+        <div class="field">
+          <span class="lbl" id="modeLbl">Chế độ</span>
+          <div class="seg" role="group" aria-labelledby="modeLbl" id="modeSeg">
+            <button type="button" data-v="demo" aria-pressed="true">Xem thị phạm</button>
+            <button type="button" data-v="practice" aria-pressed="false">Thực hành</button>
+          </div>
+          <p class="hint" id="modeHint"></p>
+        </div>
+        <label class="field"><span class="lbl">Kịch bản</span><select id="scenario"></select></label>
+        <div class="field" id="caseField" hidden><label class="field" style="margin:0"><span class="lbl">Ca bệnh</span><select id="caseSel"></select></label>
+          <p class="hint" id="caseSummary"></p></div>
+        <p class="hint" id="srcNote"></p>
+        <label class="field practice-only"><span class="lbl">Vai trò của bạn</span><select id="role"></select></label>
+        <label class="field" id="classField"><span class="lbl">Mã lớp (giảng viên cung cấp)</span><input id="classCode" maxlength="64" autocomplete="off" placeholder="Bỏ trống nếu giảng viên không yêu cầu"></label>
+        <label class="field practice-only"><span class="lbl">Mã học viên (không ghi họ tên)</span><input id="learner" maxlength="40" placeholder="Ví dụ: SV2026-014" autocomplete="off"></label>
+        <div class="field demo-only">
+          <span class="lbl" id="spdLbl">Tốc độ</span>
+          <div class="seg" role="group" aria-labelledby="spdLbl" id="speedSeg">
+            <button type="button" data-v="0.6" aria-pressed="false">Chậm</button>
+            <button type="button" data-v="1" aria-pressed="true">Vừa</button>
+            <button type="button" data-v="2" aria-pressed="false">Nhanh</button>
+          </div>
+        </div>
+        <p class="warn" id="draftNote"></p>
+        <button class="btn primary" id="startBtn" type="button">Bắt đầu</button>
+        <p class="hint" id="serverNote"></p>
+      </section>
+
+      <section class="panel" id="runPanel" hidden>
+        <div class="runhead">
+          <div><p class="eyebrow" id="runMode"></p><h2 id="runTitle"></h2></div>
+          <div class="timer" id="timer">00:00</div>
+        </div>
+        <div class="casebox" id="runCase" hidden><strong id="runCaseTitle"></strong><p id="runCaseSum"></p></div>
+        <canvas id="endo" aria-label="Màn hình ống soi"></canvas>
+        <div class="note" id="noteBox" hidden><p class="eyebrow">Ghi chú chuyên môn</p><strong id="noteTitle"></strong><p id="noteText"></p><p class="hint" id="noteSrc"></p></div>
+        <div class="decision" id="decision" hidden></div>
+        <div id="m2tools" class="m2tools" hidden>
+          <button class="btn" id="scrubBtn" type="button">Bắt đầu rửa tay</button>
+          <label class="chk"><input type="checkbox" id="fastScrub"> Tua nhanh ×10</label>
+          <label class="chk"><input type="checkbox" id="touchMode"> Chạm tay</label>
+        </div>
+        <div id="palette" class="palette"></div>
+        <div class="row">
+          <label class="chk practice-only"><input type="checkbox" id="showHints"> Hiện gợi ý các bước</label>
+          <span class="spacer"></span>
+          <button class="btn" id="finishBtn" type="button">Kết thúc</button>
+        </div>
+        <h3>Tiến trình</h3>
+        <ol class="steps" id="steps"></ol>
+        <h3>Nhật ký</h3>
+        <ul class="log" id="log"></ul>
+      </section>
+    </aside>
+  </div>
+  <footer>Kịch bản đang ở dạng bản nháp, dùng để thử hệ thống; trình tự chuyên môn phải được hội đồng chuyên môn bệnh viện đối tác duyệt trước khi giảng dạy chính thức. Mã học viên là mã ẩn danh; không nhập họ tên hoặc thông tin người bệnh.</footer>
+</div>
+
+<dialog id="result">
+  <h2 id="resTitle">Kết quả</h2>
+  <div class="score" id="resScore"></div>
+  <ul class="log" id="resList"></ul>
+  <div id="resQuiz"></div>
+  <p class="hint" id="resOfficial"></p>
+  <div class="row"><a class="btn srv" href="./" target="_blank" rel="noopener">Mở bảng điều khiển</a>
+    <a class="btn" id="resReport" href="session" target="_blank" rel="noopener" hidden>Báo cáo chi tiết buổi này</a>
+    <button class="btn" id="resDownload" type="button" hidden>Tải tệp kết quả</button><span class="spacer"></span>
+    <button class="btn primary" id="resClose" type="button">Đóng</button></div>
+</dialog>
+<dialog id="quiz" class="wide"><h2>Câu hỏi kiến thức</h2><p class="hint">Theo quy trình của bệnh viện. Điểm câu hỏi tách riêng khỏi điểm quy trình.</p>
+  <div id="quizBody"></div>
+  <div class="row"><button class="btn" id="quizSkip" type="button">Bỏ qua</button><span class="spacer"></span><button class="btn primary" id="quizSubmit" type="button">Nộp bài</button></div></dialog>
+<dialog id="info"><h2 id="infoTitle"></h2><dl id="infoBody"></dl><div class="row"><span class="spacer"></span><button class="btn primary" id="infoClose" type="button">Đóng</button></div></dialog>
+
+<script src="static/sim/three.min.js"></script>
+<script src="static/sim/endo.js"></script>
+<script src="static/sim/endo_lap.js"></script>
+<script src="static/sim/or3d.js"></script>
+<script src="static/sim/engine.js"></script>
+<script src="static/sim/video.js"></script>
+<script src="static/sim/app.js"></script>
+</body>
+</html>

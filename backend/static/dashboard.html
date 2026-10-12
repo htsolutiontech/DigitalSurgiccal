@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bảng điều khiển giảng viên – Mô phỏng phòng mổ robot</title>
+<style>
+:root{--bg:#EEF2F3;--surface:#FFFFFF;--ink:#16252C;--muted:#5A6B72;--line:#D3DCDF;--accent:#1B6A64;--bad:#B3312A;--ok:#2C7A47;--warn:#9A5B00}
+@media (prefers-color-scheme: dark){:root{--bg:#0E1618;--surface:#162125;--ink:#E1EBED;--muted:#91A3A9;--line:#2A393E;--accent:#4DB0A6;--bad:#E56A5E;--ok:#5FBF83;--warn:#E8B45A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px clamp(12px,3vw,32px) 48px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 18px}
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+select,button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:720px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px}
+@media (max-width:960px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto}
+.panel h2{font-size:15px;margin:0 0 10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:13px}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12.5px;font-weight:600}
+.pass{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.fail{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.err{font-size:13px;color:var(--muted);margin:4px 0 0;padding-left:16px}
+.err li.critical{color:var(--bad)}
+.err li.major{color:var(--warn)}
+.row-btn{border:0;background:none;color:var(--accent);padding:0;cursor:pointer;font-size:13px}
+.bars div{margin:6px 0}
+.bars .lbl{font-size:13px}
+.bars .track{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bars .fill{height:100%;background:var(--accent)}
+.empty{color:var(--muted)}
+.note{color:var(--muted);font-size:12.5px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bảng điều khiển giảng viên</h1>
+  <p class="sub">Kết quả các buổi mô phỏng phòng mổ, lấy từ câu lệnh xAPI. <a href="/sim" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Mở hệ thống mô phỏng</a> · <a href="/video-markers" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Gắn mốc video theo bước</a><span class="server-only"> · <a href="/live" style="color:var(--accent);font-weight:600">Theo dõi trực tiếp buổi đang làm</a></span></p>
+  <div class="bar">
+    <label>Kịch bản
+      <select id="scn">
+        <option value="">Tất cả</option>
+        <option value="m2_sterile_basics">Module 2: Vô khuẩn</option>
+        <option value="m3_safety_checklist">Module 3: Bảng kiểm an toàn</option>
+        <option value="m5_lap_appendectomy_ntp">Module 5: Nội soi cắt ruột thừa (BV Nguyễn Tri Phương)</option>
+        <option value="m6_emergency_undock">Module 6: Tháo robot khẩn cấp</option>
+      </select>
+    </label>
+    <button id="reload" type="button">Tải lại</button>
+    <label style="color:var(--muted);font-size:14px"><input type="checkbox" id="auto" checked> Tự cập nhật 5 giây</label>
+    <a href="/api/export.csv" style="color:var(--accent);font-weight:600">Xuất CSV (mở bằng Excel)</a>
+    <label class="imp" title="Tệp kết quả sinh viên tải về từ bản tự luyện (không có máy chủ)"><input type="file" id="impFile" accept=".json,application/json" multiple hidden>
+      <span id="impBtn" role="button" tabindex="0" style="color:var(--accent);font-weight:600;cursor:pointer">Nhập tệp kết quả của sinh viên</span></label>
+    <span id="impMsg" style="color:var(--muted);font-size:14px"></span>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="sN">–</b><span>Buổi mô phỏng</span></div>
+    <div class="stat"><b id="sF">–</b><span>Đã kết thúc</span></div>
+    <div class="stat"><b id="sP">–</b><span>Tỉ lệ đạt</span></div>
+    <div class="stat"><b id="sM">–</b><span>Điểm quy trình trung bình</span></div>
+    <div class="stat"><b id="sQ">–</b><span>Câu hỏi kiến thức đúng</span></div>
+    <div class="stat"><b id="sA">–</b><span>Buổi đã có phiếu đánh giá</span></div>
+  </div>
+  <div class="grid">
+    <section class="panel"><h2>Các buổi gần đây</h2><div id="sessions"></div></section>
+    <section class="panel"><h2>Lỗi thường gặp</h2><div id="top" class="bars"></div>
+      <h2 style="margin-top:16px">Lỗi theo giai đoạn</h2><div id="phases" class="bars"></div>
+      <h2 style="margin-top:16px">Lỗi theo vai trò</h2><div id="roles" class="bars"></div></section>
+  </div>
+  <p class="note">Điểm quy trình do hệ thống chấm lại từ nhật ký thao tác, không lấy điểm ghi sẵn trong tệp. Kịch bản đang ở trạng thái bản nháp, chưa được hội đồng chuyên môn duyệt; đánh giá tổng kết cần kết hợp phiếu quan sát của giảng viên.</p>
+</div>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

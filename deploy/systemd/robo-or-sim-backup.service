@@ -1,0 +1,10 @@
+[Unit]
+Description=Sao luu CSDL Robo OR Sim
+
+[Service]
+Type=oneshot
+User=robosim
+Group=robosim
+WorkingDirectory=/opt/robo-or-sim
+Environment=ROBO_DB=/var/lib/robo-or-sim/robo_or_sim.db
+ExecStart=/opt/robo-or-sim/.venv/bin/python tools/backup_db.py --out /var/lib/robo-or-sim/backups --keep-days 30

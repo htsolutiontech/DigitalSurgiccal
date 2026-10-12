@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theo dõi trực tiếp – Mô phỏng phòng mổ robot</title>
+<style>
+:root{--bg:#EEF2F3;--surface:#FFFFFF;--ink:#16252C;--muted:#5A6B72;--line:#D3DCDF;--accent:#1B6A64;--bad:#B3312A;--ok:#2C7A47;--warn:#9A5B00}
+@media (prefers-color-scheme: dark){:root{--bg:#0E1618;--surface:#162125;--ink:#E1EBED;--muted:#91A3A9;--line:#2A393E;--accent:#4DB0A6;--bad:#E56A5E;--ok:#5FBF83;--warn:#E8B45A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px clamp(12px,3vw,32px) 48px}
+a{color:var(--accent)}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+select,button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+@media (max-width:720px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.stat b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.stat.alert b{color:var(--bad)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px;overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:13px;white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.crit td:first-child{box-shadow:inset 4px 0 0 var(--bad)}
+tr.idle{opacity:.6}
+tr.submitted td{color:var(--muted)}
+.who{font-weight:600}
+.small{font-size:12.5px;color:var(--muted)}
+.track{height:8px;background:var(--line);border-radius:4px;overflow:hidden;min-width:110px;margin-top:4px}
+.fill{height:100%;background:var(--accent)}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.p-active{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.p-idle{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.p-submitted{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--muted)}
+.bad{color:var(--bad);font-weight:600}
+.warn{color:var(--warn)}
+.empty{color:var(--muted);padding:12px 4px}
+.note{color:var(--muted);font-size:12.5px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a href="/">← Bảng điều khiển</a> · <a href="/sim" target="_blank" rel="noopener">Mở mô phỏng</a></p>
+  <h1>Theo dõi trực tiếp</h1>
+  <p class="sub">Các buổi sinh viên đang làm, cập nhật 5 giây một lần. Buổi có lỗi nghiêm trọng được đưa lên đầu và đánh dấu đỏ.</p>
+  <div class="bar">
+    <label>Kịch bản <select id="scn"><option value="">Tất cả</option></select></label>
+    <label>Trong <select id="hours"><option value="1">1 giờ</option><option value="3">3 giờ</option><option value="6" selected>6 giờ</option><option value="24">24 giờ</option></select> gần đây</label>
+    <label><input type="checkbox" id="showDone" checked> Hiện buổi đã nộp</label>
+    <span class="small" id="updated"></span>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="nActive">–</b><span>Đang làm</span></div>
+    <div class="stat" id="critBox"><b id="nCrit">–</b><span>Đang làm, có lỗi nghiêm trọng</span></div>
+    <div class="stat"><b id="nIdle">–</b><span>Tạm dừng / mất tín hiệu</span></div>
+    <div class="stat"><b id="nDone">–</b><span>Đã nộp</span></div>
+  </div>
+  <section class="panel"><div id="list"></div></section>
+  <p class="note">Tiến độ do trình duyệt sinh viên gửi về khoảng 10 giây một lần và ngay khi có lỗi nghiêm trọng; máy chủ chạy lại nhật ký thao tác để kiểm tra trước khi hiển thị. Điểm chính thức chỉ có khi sinh viên nộp bài. "Tạm dừng" nghĩa là quá 45 giây không nhận được tín hiệu (sinh viên đóng trang, mất mạng hoặc máy ngủ).</p>
+</div>
+<script src="/static/js/live.js"></script>
+</body>
+</html>

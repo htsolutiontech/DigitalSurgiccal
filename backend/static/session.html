@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chi tiết buổi mô phỏng</title>
+<style>
+:root{--bg:#EEF2F3;--surface:#FFFFFF;--ink:#16252C;--muted:#5A6B72;--line:#D3DCDF;--accent:#1B6A64;--accent-ink:#fff;--bad:#B3312A;--ok:#2C7A47;--warn:#9A5B00}
+@media (prefers-color-scheme: dark){:root{--bg:#0E1618;--surface:#162125;--ink:#E1EBED;--muted:#91A3A9;--line:#2A393E;--accent:#4DB0A6;--accent-ink:#06201D;--bad:#E56A5E;--ok:#5FBF83;--warn:#E8B45A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:22px clamp(12px,3vw,32px) 48px}
+a{color:var(--accent)}
+h1{font-size:23px;margin:4px 0}
+.sub{color:var(--muted);margin:0 0 14px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:14px 0}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.stat b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:13px}
+.pass{color:var(--ok)}.fail{color:var(--bad)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
+@media (max-width:1000px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px;overflow:auto}
+.panel h2{font-size:16px;margin:0 0 10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.ph td{background:var(--bg);font-weight:700}
+tr.na td{opacity:.5}
+.err{color:var(--bad);font-size:13px}
+.tag{display:inline-block;font-size:11.5px;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--muted);margin-left:4px}
+.phbar{margin:8px 0}.phbar .lbl{display:flex;justify-content:space-between;font-size:13.5px}
+.track{height:8px;background:var(--line);border-radius:4px;overflow:hidden}.fill{height:100%;background:var(--accent)}
+ul.tl{list-style:none;margin:0;padding:0;font-size:13px;max-height:420px;overflow:auto}
+ul.tl li{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}
+ul.tl time{color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 56px}
+ul.tl li.erred span{color:var(--bad)}
+form label{display:block;margin:8px 0 3px;font-weight:600;font-size:13.5px}
+.rate{display:flex;gap:4px;flex-wrap:wrap}
+.rate input{display:none}.rate label{margin:0;font-weight:500;border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer}
+.rate input:checked+label{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+input[type=text],textarea,select{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;margin-top:12px}
+.hint{color:var(--muted);font-size:12.5px}
+.prev{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;font-size:13.5px}
+@media print{form,.noprint{display:none}.panel{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="noprint"><a href="/">← Bảng điều khiển</a> · <a href="#" id="printLink">In báo cáo</a></p>
+  <h1 id="title">Đang tải…</h1>
+  <p class="sub" id="sub"></p>
+  <div class="stats" id="stats"></div>
+  <div class="grid">
+    <div>
+      <section class="panel"><h2>Kết quả theo giai đoạn</h2><div id="phases"></div></section>
+      <section class="panel"><h2>Từng bước của quy trình</h2><div id="steps"></div></section>
+      <section class="panel" id="quizPanel" hidden><h2>Câu hỏi kiến thức</h2><div id="quiz"></div></section>
+    </div>
+    <div>
+      <section class="panel"><h2>Phiếu đánh giá của giảng viên</h2>
+        <form id="form">
+          <label for="assessor">Giảng viên</label><input type="text" id="assessor" maxlength="60" required placeholder="Tên hoặc mã giảng viên">
+          <div id="rubric"></div>
+          <label for="overall">Kết luận</label>
+          <select id="overall"><option value="dat">Đạt</option><option value="chua_dat">Chưa đạt</option><option value="can_lam_lai">Cần làm lại</option></select>
+          <label for="comment">Nhận xét, góp ý cho học viên</label><textarea id="comment" rows="4" maxlength="2000"></textarea>
+          <p class="hint">Thang 1–5: 1 = chưa thực hiện được, 3 = đạt yêu cầu có nhắc, 5 = thành thạo, độc lập. Thang này do nhóm phát triển đề xuất, chưa phải công cụ đã thẩm định; nên thay bằng tiêu chí của bộ môn.</p>
+          <button type="submit">Lưu đánh giá</button>
+          <p class="hint" id="saved"></p>
+        </form>
+        <div id="prev"></div>
+      </section>
+      <section class="panel"><h2>Dòng thời gian</h2><ul class="tl" id="timeline"></ul></section>
+    </div>
+  </div>
+  <p class="hint" id="src"></p>
+</div>
+<script src="/static/js/session.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Caddy: HTTPS tự động (Let's Encrypt) cho tên miền công khai
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	request_body {
+		max_size 2MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	reverse_proxy {$UPSTREAM:app:8000}
+
+	log {
+		output stdout
+	}
+}

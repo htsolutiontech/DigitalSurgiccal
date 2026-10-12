@@ -1,0 +1,15 @@
+{
+  "_note": "Danh mục video tham khảo cho từng kịch bản. Chỉ nhúng bằng trình phát chính thức của nhà cung cấp; không tải xuống hoặc phát lại bản sao. Mốc thời gian theo bước do giảng viên gắn trên trang /video-markers và lưu trong cơ sở dữ liệu.",
+  "m5_lap_appendectomy_ntp": [
+    {
+      "key": "yt_lFUi_ozMJUc",
+      "provider": "youtube",
+      "video_id": "lFUi_ozMJUc",
+      "title": "Phẫu thuật nội soi viêm ruột thừa, dấu hiệu nhận biết viêm ruột thừa",
+      "channel": "Bệnh Viện Đa Khoa Sài Gòn Phan Rang",
+      "source_url": "https://www.youtube.com/watch?v=lFUi_ozMJUc",
+      "added_on": "2026-10-06",
+      "note": "Video của cơ sở khác với BV Nguyễn Tri Phương: kỹ thuật, dụng cụ, thứ tự thao tác có thể khác quy trình đang dùng làm chuẩn chấm. Khi gắn mốc, đánh dấu những bước khác quy trình. Nên xin phép đơn vị sở hữu trước khi đưa vào chương trình chính thức."
+    }
+  ]
+}

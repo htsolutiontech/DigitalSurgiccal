@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gắn mốc video theo bước</title>
+<style>
+:root{--bg:#EEF2F3;--surface:#FFFFFF;--ink:#16252C;--muted:#5A6B72;--line:#D3DCDF;--accent:#1B6A64;--accent-ink:#fff;--bad:#B3312A;--ok:#2C7A47;--warn:#9A5B00;--warn-bg:#FBF1DE}
+@media (prefers-color-scheme: dark){:root{--bg:#0E1618;--surface:#162125;--ink:#E1EBED;--muted:#91A3A9;--line:#2A393E;--accent:#4DB0A6;--accent-ink:#06201D;--bad:#E56A5E;--ok:#5FBF83;--warn:#E8B45A;--warn-bg:#2B2416}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.wrap{max-width:1360px;margin:0 auto;padding:20px clamp(12px,3vw,28px) 40px}
+a{color:var(--accent)}
+h1{font-size:22px;margin:4px 0}
+.sub{color:var(--muted);margin:0 0 12px;max-width:100ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:16px;align-items:start}
+@media (max-width:1050px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.panel h2{font-size:16px;margin:0 0 10px}
+.player{position:relative;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden}
+.player>div,.player iframe{position:absolute;inset:0;width:100%;height:100%}
+.offline{position:absolute;inset:0;display:grid;place-items:center;color:#fff;text-align:center;padding:20px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.spacer{flex:1}
+.time{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+button,select,input,textarea{font:inherit}
+button{font-weight:600;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.danger{color:var(--bad)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+select,input[type=text],input[type=number],textarea{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input[type=number]{width:110px}
+textarea{width:100%}
+label.f{display:block;font-weight:600;font-size:13px;margin:10px 0 3px}
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:8px 10px;font-size:13.5px}
+.hint{color:var(--muted);font-size:12.5px}
+ol.steps{list-style:none;margin:0;padding:0;max-height:62vh;overflow:auto;font-size:13.5px}
+ol.steps li.ph{font-weight:700;background:var(--bg);padding:5px 8px;border-bottom:1px solid var(--line)}
+ol.steps li.st{display:flex;gap:8px;padding:6px 8px;border-bottom:1px solid var(--line);cursor:pointer}
+ol.steps li.st:hover{background:var(--bg)}
+ol.steps li.st[aria-selected="true"]{outline:2px solid var(--accent);outline-offset:-2px}
+ol.steps li .m{flex:0 0 96px;font-variant-numeric:tabular-nums;color:var(--muted)}
+ol.steps li.has .m{color:var(--ok);font-weight:600}
+ol.steps li .d{color:var(--warn);font-size:12px}
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0}.prog div{height:100%;background:var(--accent)}
+.timeline{position:relative;height:22px;background:var(--bg);border:1px solid var(--line);border-radius:4px;margin-top:10px;cursor:pointer}
+.timeline span{position:absolute;top:2px;bottom:2px;background:var(--accent);opacity:.55;border-radius:2px}
+.timeline span.sel{opacity:1;background:var(--warn)}
+.timeline i{position:absolute;top:0;bottom:0;width:2px;background:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a href="/">← Bảng điều khiển</a> · <a href="/sim" target="_blank" rel="noopener">Mở mô phỏng</a></p>
+  <h1>Gắn mốc video thật cho từng bước quy trình</h1>
+  <p class="sub">Phát video, dừng ở chỗ bắt đầu một bước, bấm "Đầu đoạn", phát tiếp tới chỗ kết thúc, bấm "Cuối đoạn", rồi Lưu. Mô phỏng sẽ phát đúng đoạn này khi sinh viên làm tới bước đó. Phím tắt: <b>[</b> đặt đầu đoạn, <b>]</b> đặt cuối đoạn, <b>S</b> lưu.</p>
+  <div class="row" style="margin-top:0">
+    <label>Kịch bản <select id="scn"></select></label>
+    <label>Video <select id="vid"></select></label>
+    <label>Người gắn <input type="text" id="author" maxlength="60" placeholder="Tên giảng viên"></label>
+  </div>
+  <p class="warn" id="vnote" hidden></p>
+  <div class="grid" style="margin-top:12px">
+    <div>
+      <section class="panel">
+        <div class="player" id="pwrap"><div id="player"></div></div>
+        <div class="row"><span class="time" id="now">00:00.0</span>
+          <button type="button" id="back5">−5 giây</button><button type="button" id="back1">−1 giây</button>
+          <button type="button" id="play">Phát / Dừng</button>
+          <button type="button" id="fwd1">+1 giây</button><button type="button" id="fwd5">+5 giây</button>
+          <span class="spacer"></span><a id="srcLink" target="_blank" rel="noopener">Mở trên YouTube</a></div>
+        <div class="timeline" id="tline" title="Bấm để tua tới vị trí"></div>
+        <p class="hint">Các đoạn đã gắn hiện trên thanh thời gian; đoạn của bước đang chọn có màu cam.</p>
+      </section>
+      <section class="panel" id="editor">
+        <h2 id="stTitle">Chọn một bước ở danh sách bên phải</h2>
+        <p class="hint" id="stMeta"></p>
+        <div class="row">
+          <label>Đầu đoạn (giây) <input type="number" id="start" min="0" step="0.1"></label><button type="button" id="setStart">Đầu đoạn = hiện tại [</button>
+        </div>
+        <div class="row">
+          <label>Cuối đoạn (giây) <input type="number" id="end" min="0" step="0.1"></label><button type="button" id="setEnd">Cuối đoạn = hiện tại ]</button>
+        </div>
+        <label class="f" for="note">Ghi chú giảng dạy cho đoạn này</label>
+        <textarea id="note" rows="3" maxlength="1000" placeholder="Ví dụ: chú ý vị trí trocar; ở video dùng clip thay vì buộc chỉ gốc"></textarea>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="differs"> Đoạn này khác quy trình đang dùng làm chuẩn chấm</label>
+        <div class="row"><button type="button" id="preview">Xem thử đoạn</button><span class="spacer"></span>
+          <button type="button" class="danger" id="del">Xoá mốc</button><button type="button" class="primary" id="save">Lưu (S)</button></div>
+        <p class="hint" id="msg"></p>
+      </section>
+    </div>
+    <div>
+      <section class="panel">
+        <h2>Các bước</h2>
+        <div id="progTxt" class="hint"></div><div class="prog"><div id="prog"></div></div>
+        <ol class="steps" id="steps"></ol>
+        <div class="row"><button type="button" id="exp">Xuất mốc (JSON)</button>
+          <label><button type="button" id="impBtn">Nhập mốc từ tệp</button><input type="file" id="imp" accept="application/json" hidden></label></div>
+      </section>
+    </div>
+  </div>
+</div>
+<script src="/static/js/video_markers.js"></script>
+</body>
+</html>

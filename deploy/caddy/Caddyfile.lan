@@ -1,0 +1,19 @@
+# Caddy trong mạng nội bộ: chứng chỉ do Caddy tự cấp (tls internal).
+# DOMAIN là tên máy hoặc địa chỉ IP nội bộ, ví dụ 192.168.1.20 hoặc sim.benhvien.local
+{$DOMAIN} {
+	tls internal
+
+	encode zstd gzip
+
+	request_body {
+		max_size 2MB
+	}
+
+	header -Server
+
+	reverse_proxy {$UPSTREAM:app:8000}
+
+	log {
+		output stdout
+	}
+}

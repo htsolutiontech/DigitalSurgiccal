@@ -1,0 +1,28 @@
+# Cài không dùng Docker (Ubuntu 22.04/24.04). Xem DEPLOY.md, mục 6.
+[Unit]
+Description=Robo OR Sim - mo phong phong mo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=robosim
+Group=robosim
+WorkingDirectory=/opt/robo-or-sim
+EnvironmentFile=/etc/robo-or-sim.env
+Environment=ROBO_ENV=production
+Environment=ROBO_DB=/var/lib/robo-or-sim/robo_or_sim.db
+# Một tiến trình đủ cho một trường (SQLite). Chỉ nghe trên 127.0.0.1; Nginx đứng trước.
+ExecStart=/opt/robo-or-sim/.venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-server-header
+Restart=on-failure
+RestartSec=3
+
+# Giới hạn quyền
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/robo-or-sim
+
+[Install]
+WantedBy=multi-user.target
