@@ -1,0 +1,4 @@
+# Thêm cho kiểm thử và công cụ phát triển
+-r requirements.txt
+httpx==0.28.1
+pytest==9.1.1

@@ -1,0 +1,51 @@
+# Triển khai: máy chủ ứng dụng + Caddy (HTTPS tự động từ Let's Encrypt)
+# Chạy:   docker compose up -d --build
+# Cấu hình trong tệp .env (tạo bằng: python3 tools/init_env.py)
+name: robo-or-sim
+
+services:
+  app:
+    build: .
+    image: robo-or-sim:0.5.0
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ROBO_ENV: production
+      ROBO_DB: /data/robo_or_sim.db
+    volumes:
+      - robo_data:/data
+    expose:
+      - "8000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Chưa đặt DOMAIN trong .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Chưa đặt ACME_EMAIL trong .env}
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  robo_data:
+  caddy_data:
+  caddy_config:

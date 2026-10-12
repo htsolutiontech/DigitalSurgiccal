@@ -1,0 +1,12 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "",
+	"Category": "",
+	"Description": "Mô phỏng quy trình và ê kíp phòng mổ robot (HealthV) - khung mã demo",
+	"Modules": [
+		{ "Name": "RoboORSim", "Type": "Runtime", "LoadingPhase": "Default" }
+	],
+	"Plugins": [
+		{ "Name": "OpenXR", "Enabled": true }
+	]
+}

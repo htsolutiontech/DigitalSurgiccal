@@ -1,0 +1,18 @@
+# Dùng cho Vercel (Vercel tìm ứng dụng FastAPI theo tool.vercel.entrypoint). Phụ thuộc giống requirements.txt.
+[project]
+name = "robo-or-sim"
+version = "0.7.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.142.2",
+    "starlette==1.6.0",
+    "pydantic==2.13.5",
+    "uvicorn==0.53.0",
+    "psycopg[binary]==3.2.10",
+]
+
+[tool.vercel]
+entrypoint = "backend.app:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

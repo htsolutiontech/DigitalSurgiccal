@@ -1,0 +1,29 @@
+{
+  "id": "m2_sterile_basics",
+  "version": "0.1.0",
+  "module": 2,
+  "title": "Vô khuẩn và quy tắc khi dự mổ",
+  "approval": {
+    "status": "draft", "approved_by": null, "approved_on": null,
+    "note": "Khoảng cách tối thiểu 0,3 m và thời gian rửa tay là giá trị giữ chỗ; theo quy định kiểm soát nhiễm khuẩn của bệnh viện đối tác."
+  },
+  "roles": ["stu", "asst", "scrub"],
+  "time_limit_s": 600,
+  "initial_state": {},
+  "sterile_field": {
+    "min_observer_distance_m": 0.3,
+    "zones": [
+      {"id": "drape", "label": "Mặt khăn mổ trên bệnh nhân", "min": [-0.9, 1.15, -0.43], "max": [1.05, 1.35, 0.43]},
+      {"id": "back_table", "label": "Bàn dụng cụ", "min": [1.05, 0.9, 0.95], "max": [2.25, 1.2, 1.55]},
+      {"id": "mayo", "label": "Bàn Mayo", "min": [1.05, 1.03, -0.38], "max": [1.55, 1.25, -0.02]}
+    ]
+  },
+  "steps": [
+    {"id": "hand_scrub", "title": "Rửa tay ngoại khoa đủ thời gian", "roles": ["stu"], "action": "hand_scrub", "after": [], "critical": true, "min_duration_s": 120},
+    {"id": "gown", "title": "Mặc áo choàng vô khuẩn có hỗ trợ", "roles": ["stu"], "action": "don_gown", "after": ["hand_scrub"], "critical": true},
+    {"id": "glove", "title": "Mang găng vô khuẩn kỹ thuật kín", "roles": ["stu"], "action": "don_gloves", "after": ["gown"], "critical": true},
+    {"id": "position", "title": "Đứng đúng vị trí được chỉ định, tay giữ trước ngực", "roles": ["stu"], "action": "take_position", "after": ["glove"], "critical": false}
+  ],
+  "rules": [],
+  "scoring": {"critical_miss": 25, "critical_error": 20, "out_of_order": 10, "wrong_role": 0, "over_time_per_10s": 0, "pass_threshold": 70, "fail_on_any_critical_error": true}
+}

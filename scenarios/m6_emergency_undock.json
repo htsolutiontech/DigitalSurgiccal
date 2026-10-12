@@ -1,0 +1,39 @@
+{
+  "id": "m6_emergency_undock",
+  "version": "0.1.0",
+  "module": 6,
+  "title": "Tháo robot khẩn cấp và chuyển mổ mở do chảy máu lớn",
+  "approval": {
+    "status": "draft",
+    "approved_by": null,
+    "approved_on": null,
+    "note": "BẢN NHÁP MINH HỌA. Trình tự phải được hội đồng chuyên môn bệnh viện đối tác duyệt và đối chiếu hướng dẫn của hãng robot đang dùng trước khi đưa vào giảng dạy."
+  },
+  "roles": ["ptv", "asst", "scrub", "anes", "anesN", "circ"],
+  "time_limit_s": 300,
+  "time_limit_note": "Giá trị giữ chỗ. Thời gian mục tiêu do bệnh viện đối tác quy định.",
+  "initial_state": {
+    "docked_arms": ["arm1", "arm2", "arm3", "camera"],
+    "instruments_in": ["arm1", "arm2", "arm3"],
+    "camera_in": true,
+    "cart_at_table": true
+  },
+  "steps": [
+    {"id": "announce", "title": "PTV tuyên bố tình huống khẩn cấp, yêu cầu chuyển mổ mở", "roles": ["ptv"], "action": "announce_emergency", "after": [], "critical": true},
+    {"id": "anes_ack", "title": "Gây mê xác nhận, chuẩn bị hồi sức và máu", "roles": ["anes"], "action": "acknowledge", "after": ["announce"], "critical": true},
+    {"id": "call_help", "title": "ĐD chạy ngoài gọi hỗ trợ, báo ngân hàng máu", "roles": ["circ"], "action": "call_help", "after": ["announce"], "critical": true},
+    {"id": "open_tray", "title": "Dụng cụ viên chuẩn bị bộ mổ mở", "roles": ["scrub"], "action": "open_laparotomy_tray", "after": ["announce"], "critical": true},
+    {"id": "remove_instruments", "title": "Phụ mổ rút toàn bộ dụng cụ khỏi tay robot", "roles": ["asst"], "action": "remove_instrument", "targets": ["arm1", "arm2", "arm3"], "after": ["announce"], "critical": true},
+    {"id": "remove_camera", "title": "Rút ống soi", "roles": ["asst"], "action": "remove_camera", "after": ["remove_instruments"], "critical": true},
+    {"id": "undock_arms", "title": "Tháo các tay robot khỏi trocar", "roles": ["asst", "scrub"], "action": "undock_arm", "targets": ["arm1", "arm2", "arm3", "camera"], "after": ["remove_camera"], "critical": true},
+    {"id": "ptv_scrub", "title": "PTV rời bàn điều khiển, mặc áo và găng vô khuẩn", "roles": ["ptv"], "action": "scrub_in", "after": ["announce"], "critical": true},
+    {"id": "move_cart", "title": "Đẩy xe robot ra khỏi bàn mổ", "roles": ["circ", "asst"], "action": "move_cart_away", "after": ["undock_arms"], "critical": true},
+    {"id": "laparotomy", "title": "Bắt đầu mở bụng", "roles": ["ptv"], "action": "start_laparotomy", "after": ["move_cart", "ptv_scrub", "open_tray"], "critical": true}
+  ],
+  "rules": [
+    {"id": "table_move_while_docked", "action": "move_table", "if_state": "any_arm_docked", "severity": "critical", "message": "Đổi tư thế bàn mổ khi tay robot còn gắn trocar"},
+    {"id": "undock_with_instrument", "action": "undock_arm", "if_state": "target_has_instrument", "severity": "critical", "message": "Tháo tay robot khi dụng cụ còn trong ổ bụng"},
+    {"id": "move_cart_while_docked", "action": "move_cart_away", "if_state": "any_arm_docked", "severity": "critical", "message": "Đẩy xe robot khi còn tay gắn trocar"}
+  ],
+  "scoring": {"critical_miss": 25, "critical_error": 20, "out_of_order": 5, "wrong_role": 3, "over_time_per_10s": 2, "pass_threshold": 70, "fail_on_any_critical_error": true}
+}

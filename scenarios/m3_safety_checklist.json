@@ -1,0 +1,39 @@
+{
+  "id": "m3_safety_checklist",
+  "version": "0.1.0",
+  "module": 3,
+  "title": "Bảng kiểm an toàn phẫu thuật WHO: Sign in, Time out, Sign out",
+  "approval": {
+    "status": "draft", "approved_by": null, "approved_on": null,
+    "note": "Các mục theo Bảng kiểm an toàn phẫu thuật của WHO. Đối chiếu mẫu bảng kiểm đang dùng tại bệnh viện đối tác trước khi giảng dạy."
+  },
+  "roles": ["ptv", "asst", "scrub", "anes", "anesN", "circ"],
+  "time_limit_s": null,
+  "initial_state": {},
+  "steps": [
+    {"id": "si_identity", "title": "Sign in: xác nhận danh tính, vị trí mổ, phương pháp, đồng ý phẫu thuật", "roles": ["anes", "circ"], "action": "confirm", "target": "si_identity", "after": [], "critical": true},
+    {"id": "si_site", "title": "Sign in: vị trí mổ đã đánh dấu (hoặc không áp dụng)", "roles": ["anes", "circ"], "action": "confirm", "target": "si_site", "after": [], "critical": false},
+    {"id": "si_machine", "title": "Sign in: kiểm tra máy gây mê và thuốc", "roles": ["anes"], "action": "confirm", "target": "si_machine", "after": [], "critical": true},
+    {"id": "si_oximeter", "title": "Sign in: máy đo SpO2 đã gắn và hoạt động", "roles": ["anes", "anesN"], "action": "confirm", "target": "si_oximeter", "after": [], "critical": true},
+    {"id": "si_allergy", "title": "Sign in: tiền sử dị ứng", "roles": ["anes"], "action": "confirm", "target": "si_allergy", "after": [], "critical": true},
+    {"id": "si_airway", "title": "Sign in: nguy cơ đường thở khó, hít sặc", "roles": ["anes"], "action": "confirm", "target": "si_airway", "after": [], "critical": true},
+    {"id": "si_blood", "title": "Sign in: nguy cơ mất máu trên 500 ml (7 ml/kg ở trẻ em)", "roles": ["anes"], "action": "confirm", "target": "si_blood", "after": [], "critical": true},
+    {"id": "induction", "title": "Khởi mê", "roles": ["anes"], "action": "induce_anesthesia", "after": ["si_identity", "si_machine", "si_oximeter", "si_allergy", "si_airway", "si_blood"], "critical": true},
+    {"id": "to_intro", "title": "Time out: các thành viên giới thiệu tên và vai trò", "roles": ["circ"], "action": "confirm", "target": "to_intro", "after": ["induction"], "critical": false},
+    {"id": "to_patient", "title": "Time out: xác nhận người bệnh, phương pháp, vị trí rạch da", "roles": ["ptv", "anes", "circ"], "action": "confirm", "target": "to_patient", "after": ["induction"], "critical": true},
+    {"id": "to_antibiotic", "title": "Time out: kháng sinh dự phòng đã dùng trong 60 phút trước", "roles": ["anes"], "action": "confirm", "target": "to_antibiotic", "after": ["induction"], "critical": true},
+    {"id": "to_surgeon", "title": "Time out: PTV nêu bước nguy cơ, thời gian, lượng máu mất dự kiến", "roles": ["ptv"], "action": "confirm", "target": "to_surgeon", "after": ["induction"], "critical": true},
+    {"id": "to_anes", "title": "Time out: gây mê nêu lưu ý riêng của người bệnh", "roles": ["anes"], "action": "confirm", "target": "to_anes", "after": ["induction"], "critical": false},
+    {"id": "to_nursing", "title": "Time out: điều dưỡng xác nhận vô khuẩn và thiết bị", "roles": ["scrub"], "action": "confirm", "target": "to_nursing", "after": ["induction"], "critical": true},
+    {"id": "to_imaging", "title": "Time out: hình ảnh cần thiết đã hiển thị", "roles": ["ptv", "circ"], "action": "confirm", "target": "to_imaging", "after": ["induction"], "critical": false},
+    {"id": "incision", "title": "Rạch da", "roles": ["ptv"], "action": "incise", "after": ["to_patient", "to_antibiotic", "to_surgeon", "to_nursing"], "critical": true},
+    {"id": "so_procedure", "title": "Sign out: tên phẫu thuật đã thực hiện", "roles": ["circ"], "action": "confirm", "target": "so_procedure", "after": ["incision"], "critical": false},
+    {"id": "so_counts", "title": "Sign out: đếm đủ dụng cụ, gạc, kim", "roles": ["scrub", "circ"], "action": "confirm", "target": "so_counts", "after": ["incision"], "critical": true},
+    {"id": "so_specimen", "title": "Sign out: dán nhãn bệnh phẩm", "roles": ["circ"], "action": "confirm", "target": "so_specimen", "after": ["incision"], "critical": true},
+    {"id": "so_equipment", "title": "Sign out: sự cố thiết bị cần xử lý", "roles": ["circ"], "action": "confirm", "target": "so_equipment", "after": ["incision"], "critical": false},
+    {"id": "so_recovery", "title": "Sign out: lưu ý chính cho hồi tỉnh và điều trị sau mổ", "roles": ["ptv", "anes"], "action": "confirm", "target": "so_recovery", "after": ["incision"], "critical": false},
+    {"id": "leave_room", "title": "Người bệnh rời phòng mổ", "roles": ["anes", "circ"], "action": "transfer_out", "after": ["so_counts", "so_specimen"], "critical": true}
+  ],
+  "rules": [],
+  "scoring": {"critical_miss": 15, "critical_error": 20, "out_of_order": 8, "wrong_role": 3, "over_time_per_10s": 0, "pass_threshold": 75, "fail_on_any_critical_error": true}
+}
